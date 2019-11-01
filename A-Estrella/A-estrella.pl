@@ -12,13 +12,12 @@ buscar(Estado, Solucion) :-
     retractall(enFrontera(_)),
     retractall(enVisitados(_)),
     h(Estado, CostoH),
-    assertz(enFrontera(nodo(Estado,[], 0, CostoH))),
+    assertz(enFrontera(nodo(Estado,[], 0, CostoH))), 
     buscarA(Solucion).
 
 % Caso base
 buscarA(Solucion) :- 
     seleccionarMejorEnFrontera(Nodo),
-    % my_write("Nodo Seleccionado: ", Nodo),
     esMeta(Nodo), !,
     Nodo = nodo(Estado, Camino, _CostoG, CostoF),
     reverse([Estado|Camino], SolucionAux),
@@ -37,7 +36,7 @@ generarVecinos(Nodo, Vecinos) :-
     findall(NodoVecino, nodoVecino(Nodo, NodoVecino), Vecinos).
 
 nodoVecino(nodo(EPadre, CaminoPadre, CostoG, _CostoF), NodoVecino) :-
-    estado_suc(EPadre, EVecino, CostoStep), % backtracking point
+    estadoSuc(EPadre, EVecino, CostoStep), % backtracking point
     h(EVecino, CostoH),
     CostoGNuevo is CostoG + CostoStep,
     CostoFNueva is CostoGNuevo + CostoH,
@@ -53,18 +52,18 @@ agregarVecinos([NodoVecino|T]) :-
     agregarVecinos(T).
 agregarVecinos([_|T]) :- agregarVecinos(T). % Cuando no supera los controles
 
-superaControlDeVisitados(nodo(Estado, _Camino, _CostoG, _CostoF)) :- not(enVisitados(nodo(Estado,_,_))), !.
+superaControlDeVisitados(nodo(Estado, _Camino, _CostoG, _CostoF)) :- not(enVisitados(nodo(Estado,_,_,_))), !.
 superaControlDeVisitados(nodo(Estado, _Camino, _CostoG, CostoF)) :-
     enVisitados(nodo(Estado, _, _, CostoFV)), CostoFV > CostoF,
     retract(enVisitados(nodo(Estado, _, _, CostoFV))). 
 
-superaControlDeFrontera(nodo(Estado, _Camino, _CostoG, _CostoF)) :- not(enFrontera(nodo(Estado,_,_))), !.
+superaControlDeFrontera(nodo(Estado, _Camino, _CostoG, _CostoF)) :- not(enFrontera(nodo(Estado,_,_,_))), !.
 superaControlDeFrontera(nodo(Estado, _Camino, _CostoG, CostoF)) :-
     enFrontera(nodo(Estado, _, _, CostoFV)), CostoFV > CostoF,
     retract(enFrontera(nodo(Estado, _, _, CostoFV))). 
 
     
-estadoSuc(X, Y, Costo) :- estado_suc(X, Y, Costo), !.
+estadoSuc(X, Y, Costo) :- estado_suc(X, Y, Costo).
 estadoSuc(X, Y, Costo) :- estado_suc(Y, X, Costo).
 
 estado_suc(a, c, 20).
