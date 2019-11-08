@@ -46,24 +46,27 @@ nodoVecino(nodo(EPadre, CaminoPadre, CostoG, _CostoF), NodoVecino) :-
 
 agregarVecinos([]).
 agregarVecinos([NodoVecino|T]) :-
-    % El nuevo nodo vecino solo sera agregado si supera los siguientes controles
-    superaControlDeVisitados(NodoVecino),
-    superaControlDeFrontera(NodoVecino), !,
+    % El nuevo nodo vecino solo sera agregado si supera el siguiente control
+    noHayNodoMejor(NodoVecino), !,
     assertz(enFrontera(NodoVecino)),
     agregarVecinos(T).
 agregarVecinos([_|T]) :- agregarVecinos(T). % Cuando no supera los controles
 
-superaControlDeVisitados(nodo(Estado, _Camino, _CostoG, _CostoF)) :- not(enVisitados(nodo(Estado,_,_))), !.
-superaControlDeVisitados(nodo(Estado, _Camino, _CostoG, CostoF)) :-
-    enVisitados(nodo(Estado, _, _, CostoFV)), CostoFV > CostoF,
-    retract(enVisitados(nodo(Estado, _, _, CostoFV))). 
 
-superaControlDeFrontera(nodo(Estado, _Camino, _CostoG, _CostoF)) :- not(enFrontera(nodo(Estado,_,_))), !.
-superaControlDeFrontera(nodo(Estado, _Camino, _CostoG, CostoF)) :-
-    enFrontera(nodo(Estado, _, _, CostoFV)), CostoFV > CostoF,
-    retract(enFrontera(nodo(Estado, _, _, CostoFV))). 
-
+noHayNodoMejor(nodo(Estado, _Plan, _G, F)) :-
+    enVisitados(nodo(Estado, _, _, FVisitado)), !,
+    FVisitado > F,
+    retract(enVisitados(nodo(Estado, _, _, FVisitado))). 
     
+noHayNodoMejor(nodo(Estado, _Plan, _G, F)) :-
+    enFrontera(nodo(Estado, _, _, FVisitado)), !,
+    FVisitado > F,
+    retract(enFrontera(nodo(Estado, _, _, FVisitado))). 
+    
+% No esta en visitados ni en frontera
+noHayNodoMejor(_).
+
+
 estadoSuc(X, Y, Costo) :- estado_suc(X, Y, Costo), !.
 estadoSuc(X, Y, Costo) :- estado_suc(Y, X, Costo).
 
@@ -98,6 +101,13 @@ seleccionarMejorEnFrontera(Nodo) :-
     enFrontera(Nodo),
     Nodo = nodo(_, _, _, MenorCosto),
     forall(enFrontera(nodo(_, _, _, Costo)), Costo >= MenorCosto), !.
+
+seleccionarMejorEnFrontera(MejorNodo) :-
+    % busqueda de O(n*log(n)). sort/4 utiliza merge sort.
+    findall(Nodo, enFrontera(Nodo), ListaNodos),
+    % se ordena de menor a mayor comparando el costo F de cada nodo (posicion 4).
+    sort(4, @=<, ListaNodos, [MejorNodo | _]), !.
+
 
 my_write(Text, Variable) :-
     write(Text), writeln(Variable).
