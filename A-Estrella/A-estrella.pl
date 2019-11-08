@@ -4,7 +4,7 @@
 :-dynamic enFrontera/1, enVisitados/1.
 
 % Representaciones:
-%   nodo(Estado, ListaCamino, CostoG, CostoF). CostoF = CostoG(N) + h(N)
+%   nodo(Estado, ListaCamino, G, F). F = G(N) + h(N)
 %   enFrontera(Nodo).
 %   enVisitados(Nodo).
 
@@ -12,13 +12,12 @@ buscar(Estado, Solucion) :-
     retractall(enFrontera(_)),
     retractall(enVisitados(_)),
     h(Estado, CostoH),
-    assertz(enFrontera(nodo(Estado,[], 0, CostoH))),
+    assertz(enFrontera(nodo(Estado,[], 0, CostoH))), 
     buscarA(Solucion).
 
 % Caso base
 buscarA(Solucion) :- 
     seleccionarMejorEnFrontera(Nodo),
-    % my_write("Nodo Seleccionado: ", Nodo),
     esMeta(Nodo), !,
     Nodo = nodo(Estado, Camino, _CostoG, CostoF),
     reverse([Estado|Camino], SolucionAux),
@@ -37,7 +36,7 @@ generarVecinos(Nodo, Vecinos) :-
     findall(NodoVecino, nodoVecino(Nodo, NodoVecino), Vecinos).
 
 nodoVecino(nodo(EPadre, CaminoPadre, CostoG, _CostoF), NodoVecino) :-
-    estado_suc(EPadre, EVecino, CostoStep), % backtracking point
+    estadoSuc(EPadre, EVecino, CostoStep), % backtracking point
     h(EVecino, CostoH),
     CostoGNuevo is CostoG + CostoStep,
     CostoFNueva is CostoGNuevo + CostoH,
@@ -96,11 +95,6 @@ esMeta(nodo(g, _, _, _)).
 
 % ////////////////////////////////////////////////////////////////////////////////////////
 % //////////////////////// Auxiliares
-
-seleccionarMejorEnFrontera(Nodo) :-
-    enFrontera(Nodo),
-    Nodo = nodo(_, _, _, MenorCosto),
-    forall(enFrontera(nodo(_, _, _, Costo)), Costo >= MenorCosto), !.
 
 seleccionarMejorEnFrontera(MejorNodo) :-
     % busqueda de O(n*log(n)). sort/4 utiliza merge sort.
